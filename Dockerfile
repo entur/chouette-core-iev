@@ -51,7 +51,7 @@ RUN apt-get update && apt-get install -y locales procps && apt-get -y clean && r
 
 
 # Deploying by copying to deployment directory
-COPY boiv_iev/target/chouette_iev.ear /opt/jboss/wildfly/standalone/deployments/
+COPY boiv_iev/target/chouette_iev.ear /chouette_iev.ear
 VOLUME /update
 
 COPY boiv.properties /etc/chouette/boiv/
