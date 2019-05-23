@@ -3,9 +3,12 @@
 # docker build --build-arg WEEK=`date +%Y%U` -t chouette-core-iev .
 # docker run --add-host "db:172.17.0.1" --add-host "chouette-core.test:172.17.0.1" -e BOIV_GUI_URL_BASE=http://chouette-core.test -it --rm chouette-core-iev
 
-FROM maven:3.6.0-jdk-8 AS builder
+FROM eu.gcr.io/carbon-1287/circleci-toolbox-image AS builder
 
 ARG WEEK
+
+ARG JFROG_USER
+ARG JFROG_PASS
 
 WORKDIR /usr/src/mymaven
 
@@ -38,10 +41,10 @@ COPY mobi.chouette.service/pom.xml ./mobi.chouette.service/pom.xml
 COPY mobi.chouette.ws/pom.xml ./mobi.chouette.ws/pom.xml
 
 # See https://github.com/apache/maven-dependency-plugin/pull/2
-RUN mvn -T 2C --batch-mode com.offbytwo.maven.plugins:maven-dependency-plugin:3.1.1.MDEP568:go-offline -DexcludeGroupIds=mobi.chouette
+RUN mvn -T 2C --batch-mode com.offbytwo.maven.plugins:maven-dependency-plugin:3.1.1.MDEP568:go-offline -DexcludeGroupIds=mobi.chouette -s /tools/m2/settings.xml
 
 COPY . /usr/src/mymaven
-RUN mvn -Dmaven.test.skip=true -DskipTests=true --batch-mode install
+RUN mvn -Dmaven.test.skip=true -DskipTests=true --batch-mode install -s /tools/m2/settings.xml
 
 FROM debian:stable-slim
 
@@ -62,17 +65,17 @@ RUN echo "deb http://http.debian.net/debian stretch-backports main" > /etc/apt/s
 ENV WILDFLY_HOME=/opt/wildfly WILDFLY_VERSION=9.0.2.Final
 COPY config/*.xml /install/
 
-RUN cd /install && wget -q http://download.jboss.org/wildfly/${WILDFLY_VERSION}/wildfly-${WILDFLY_VERSION}.tar.gz && \
+RUN cd /install && wget -q https://download.jboss.org/wildfly/${WILDFLY_VERSION}/wildfly-${WILDFLY_VERSION}.tar.gz && \
     cd /opt ; tar xzf /install/wildfly-${WILDFLY_VERSION}.tar.gz ; ln -s wildfly-${WILDFLY_VERSION} wildfly && \
-    cd /install && wget -q http://central.maven.org/maven2/org/postgresql/postgresql/9.4-1206-jdbc41/postgresql-9.4-1206-jdbc41.jar && \
-    wget -q http://central.maven.org/maven2/net/postgis/postgis-jdbc/2.2.1/postgis-jdbc-2.2.1.jar && \
+    cd /install && wget -q https://repo1.maven.org/maven2/org/postgresql/postgresql/9.4-1206-jdbc41/postgresql-9.4-1206-jdbc41.jar && \
+    wget -q https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2.2.1/postgis-jdbc-2.2.1.jar && \
 	  wget -q http://www.hibernatespatial.org/repository/org/hibernate/hibernate-spatial/4.3/hibernate-spatial-4.3.jar && \
-  	wget -q http://central.maven.org/maven2/com/vividsolutions/jts/1.13/jts-1.13.jar && \
-	  wget -q http://central.maven.org/maven2/org/hibernate/hibernate-core/4.3.11.Final/hibernate-core-4.3.11.Final.jar && \
-    wget -q http://central.maven.org/maven2/org/hibernate/hibernate-envers/4.3.11.Final/hibernate-envers-4.3.11.Final.jar && \
-	  wget -q http://central.maven.org/maven2/org/hibernate/javax/persistence/hibernate-jpa-2.1-api/1.0.0.Final/hibernate-jpa-2.1-api-1.0.0.Final.jar && \
-	  wget -q http://central.maven.org/maven2/org/hibernate/hibernate-entitymanager/4.3.11.Final/hibernate-entitymanager-4.3.11.Final.jar && \
-	  wget -q http://central.maven.org/maven2/org/hibernate/hibernate-infinispan/4.3.11.Final/hibernate-infinispan-4.3.11.Final.jar && \
+  	wget -q https://repo1.maven.org/maven2/com/vividsolutions/jts/1.13/jts-1.13.jar && \
+	  wget -q https://repo1.maven.org/maven2/org/hibernate/hibernate-core/4.3.11.Final/hibernate-core-4.3.11.Final.jar && \
+    wget -q https://repo1.maven.org/maven2/org/hibernate/hibernate-envers/4.3.11.Final/hibernate-envers-4.3.11.Final.jar && \
+	  wget -q https://repo1.maven.org/maven2/org/hibernate/javax/persistence/hibernate-jpa-2.1-api/1.0.0.Final/hibernate-jpa-2.1-api-1.0.0.Final.jar && \
+	  wget -q https://repo1.maven.org/maven2/org/hibernate/hibernate-entitymanager/4.3.11.Final/hibernate-entitymanager-4.3.11.Final.jar && \
+	  wget -q https://repo1.maven.org/maven2/org/hibernate/hibernate-infinispan/4.3.11.Final/hibernate-infinispan-4.3.11.Final.jar && \
     mkdir -p $WILDFLY_HOME/modules/org/postgres/main && \
     cd /install && cp post*.jar $WILDFLY_HOME/modules/org/postgres/main && \
     cp module_postgres.xml $WILDFLY_HOME/modules/org/postgres/main/module.xml && \
