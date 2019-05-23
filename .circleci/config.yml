@@ -50,6 +50,3 @@ workflows:
     jobs:
       - deploy-docker:
           context: org-carbon
-          filters:
-            branches:
-              only: rutebanken_develop
