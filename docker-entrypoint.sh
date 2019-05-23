@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 cmd=$1
 
 SETUP_FILE=/setup.done
@@ -9,6 +10,15 @@ POSTGRES_NAME=${POSTGRES_NAME:-chouette2}
 POSTGRES_USER=${POSTGRES_USER:-chouette}
 POSTGRES_PASS=${POSTGRES_PASS:-chouette}
 
+if [ -n "$BOIV_GUI_URL_BASE" -a -z "$WEBGUI_HOST" ]; then
+    if echo "$BOIV_GUI_URL_BASE" | egrep 'http://.+:[0-9]+' ; then
+        WEBGUI_HOST=`echo "$BOIV_GUI_URL_BASE" | sed -n 's@http://\(.*\):.*@\1@p'`
+        WEBGUI_PORT=`echo "$BOIV_GUI_URL_BASE" | sed -n 's@http://.*:\([0-9]*\).*@\1@p'`
+    else
+        WEBGUI_HOST=`echo "$BOIV_GUI_URL_BASE" | sed -n 's@http://\(.*\)$@\1@p' | sed 's@/$@@'`
+        WEBGUI_PORT=80
+    fi
+fi
 
 WEBGUI_HOST=${WEBGUI_HOST:-stif-boiv-web}
 WEBGUI_PORT=${WEBGUI_PORT:-3000}
@@ -48,6 +58,8 @@ function waitWebGui {
 
 
 function setup() {
+  echo "Setup IEV in Wildfly"
+
 	sed -i "s#BOIV_GUI_URL_BASE#$BOIV_GUI_URL_BASE#g" /etc/chouette/boiv/boiv.properties
 	sed -i "s#BOIV_GUI_URL_TOKEN#$BOIV_GUI_URL_TOKEN#g" /etc/chouette/boiv/boiv.properties
 	sed -i "s#IEV_MAX_PARALLEL_JOBS#$IEV_MAX_PARALLEL_JOBS#g" /etc/chouette/boiv/boiv.properties
@@ -64,9 +76,8 @@ function setup() {
 	$WILDFLY_HOME/bin/add-user.sh  -u admin -p admin -s
 
 	# add postgres driver and chouette database
-	sh bin/jboss-cli.sh <<EOS
-	connect
-    /system-property=jboss.as.management.blocking.timeout:add(value=900)
+	sh bin/jboss-cli.sh -c <<EOS
+  /system-property=jboss.as.management.blocking.timeout:add(value=900)
 	/subsystem=datasources/jdbc-driver=postgresql:add(driver-name="postgresql",driver-module-name="org.postgres",driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
 	data-source add --jndi-name=java:jboss/datasources/chouette --name=chouette --connection-url=jdbc:postgresql_postGIS://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_NAME} --driver-class=org.postgis.DriverWrapper --driver-name=postgresql --user-name=${POSTGRES_USER} --password=${POSTGRES_PASS} --max-pool-size=30
 	/subsystem=datasources/data-source=chouette/connection-properties=stringtype:add(value=unspecified)
@@ -74,9 +85,7 @@ function setup() {
 	/subsystem=ee/managed-executor-service=default/ :write-attribute(name=queue-length,value=20)
 EOS
 
-
-	pkill -15 java
-
+  sh bin/jboss-cli.sh -c ":shutdown"
 }
 
 
@@ -90,16 +99,6 @@ bash)
   	setup && echo $(date) > $SETUP_FILE
   fi
   mv /chouette_iev.ear $WILDFLY_HOME/standalone/deployments/
-  if [ -e  /update/chouette_iev.ear ]; then
-  	diff $WILDFLY_HOME/standalone/deployments/chouette_iev.ear /update/chouette_iev.ear || cp /update/chouette_iev.ear $WILDFLY_HOME/standalone/deployments/
-  else
-	if [ ! -e $WILDFLY_HOME/standalone/deployments/chouette_iev.ear ]; then
-		cd /tmp
-		wget -q $chouette_iev.ear_BUILD_URL
-		mv /tmp/chouette_iev.ear $WILDFLY_HOME/standalone/deployments/
-	fi
-
-  fi
   exec $WILDFLY_HOME/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0
   ;;
 esac
