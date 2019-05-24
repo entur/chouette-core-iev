@@ -50,7 +50,7 @@ jobs:
             - pom.xml
             - .circleci
   deploy-docker:
-      docker:
+    docker:
       - image: eu.gcr.io/carbon-1287/circleci-toolbox-image
         auth:
           username: _json_key
