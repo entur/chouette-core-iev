@@ -49,6 +49,9 @@ jobs:
             - boiv_iev/target/chouette_iev.ear
             - pom.xml
             - .circleci
+            - Dockerfile
+            - config
+            - boiv.properties
   deploy-docker:
     docker:
       - image: eu.gcr.io/carbon-1287/circleci-toolbox-image
