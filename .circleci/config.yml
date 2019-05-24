@@ -52,6 +52,7 @@ jobs:
             - Dockerfile
             - config
             - boiv.properties
+            - docker-entrypoint.sh
   deploy-docker:
     docker:
       - image: eu.gcr.io/carbon-1287/circleci-toolbox-image
