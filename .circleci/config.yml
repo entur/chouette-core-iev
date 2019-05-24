@@ -82,4 +82,6 @@ workflows:
           context: org-carbon
           requires:
             - build
-
+          filters:
+            branches:
+              only: entur_develop
