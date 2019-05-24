@@ -51,3 +51,6 @@ workflows:
     jobs:
       - deploy-docker:
           context: org-carbon
+          filters:
+            branches:
+              only: entur_develop
