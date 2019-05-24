@@ -48,6 +48,9 @@ RUN mvn -Dmaven.test.skip=true -DskipTests=true --batch-mode install -s /tools/m
 
 FROM debian:stable-slim
 
+ARG JFROG_USER
+ARG JFROG_PASS
+
 LABEL Description="Chouette IEV"
 
 #--- Java, wget & locales
@@ -66,16 +69,16 @@ ENV WILDFLY_HOME=/opt/wildfly WILDFLY_VERSION=9.0.2.Final
 COPY config/*.xml /install/
 
 RUN cd /install && wget -q https://download.jboss.org/wildfly/${WILDFLY_VERSION}/wildfly-${WILDFLY_VERSION}.tar.gz && \
-    cd /opt ; tar xzf /install/wildfly-${WILDFLY_VERSION}.tar.gz ; ln -s wildfly-${WILDFLY_VERSION} wildfly && \
-    cd /install && wget -q https://repo1.maven.org/maven2/org/postgresql/postgresql/9.4-1206-jdbc41/postgresql-9.4-1206-jdbc41.jar && \
-    wget -q https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2.2.1/postgis-jdbc-2.2.1.jar && \
-	  wget -q http://www.hibernatespatial.org/repository/org/hibernate/hibernate-spatial/4.3/hibernate-spatial-4.3.jar && \
-  	wget -q https://repo1.maven.org/maven2/com/vividsolutions/jts/1.13/jts-1.13.jar && \
-	  wget -q https://repo1.maven.org/maven2/org/hibernate/hibernate-core/4.3.11.Final/hibernate-core-4.3.11.Final.jar && \
-    wget -q https://repo1.maven.org/maven2/org/hibernate/hibernate-envers/4.3.11.Final/hibernate-envers-4.3.11.Final.jar && \
-	  wget -q https://repo1.maven.org/maven2/org/hibernate/javax/persistence/hibernate-jpa-2.1-api/1.0.0.Final/hibernate-jpa-2.1-api-1.0.0.Final.jar && \
-	  wget -q https://repo1.maven.org/maven2/org/hibernate/hibernate-entitymanager/4.3.11.Final/hibernate-entitymanager-4.3.11.Final.jar && \
-	  wget -q https://repo1.maven.org/maven2/org/hibernate/hibernate-infinispan/4.3.11.Final/hibernate-infinispan-4.3.11.Final.jar && \
+    cd /opt ; tar xzf /install/wildfly-${WILDFLY_VERSION}.tar.gz ; ln -s wildfly-${WILDFLY_VERSION} wildfly && rm /install/wildfly-${WILDFLY_VERSION}.tar.gz
+RUN cd /install && wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/postgresql/postgresql/9.4-1206-jdbc41/postgresql-9.4-1206-jdbc41.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/net/postgis/postgis-jdbc/2.2.1/postgis-jdbc-2.2.1.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/libs-release-local/hibernate-spatial/hibernate-spatial/4.3/hibernate-spatial-4.3.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/com/vividsolutions/jts/1.13/jts-1.13.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/hibernate/hibernate-core/4.3.11.Final/hibernate-core-4.3.11.Final.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/hibernate/hibernate-envers/4.3.11.Final/hibernate-envers-4.3.11.Final.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/hibernate/javax/persistence/hibernate-jpa-2.1-api/1.0.0.Final/hibernate-jpa-2.1-api-1.0.0.Final.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/hibernate/hibernate-entitymanager/4.3.11.Final/hibernate-entitymanager-4.3.11.Final.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/hibernate/hibernate-infinispan/4.3.11.Final/hibernate-infinispan-4.3.11.Final.jar && \
     mkdir -p $WILDFLY_HOME/modules/org/postgres/main && \
     cd /install && cp post*.jar $WILDFLY_HOME/modules/org/postgres/main && \
     cp module_postgres.xml $WILDFLY_HOME/modules/org/postgres/main/module.xml && \
