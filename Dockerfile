@@ -24,7 +24,7 @@ RUN cd /install && wget -q https://download.jboss.org/wildfly/${WILDFLY_VERSION}
     cd /opt ; tar xzf /install/wildfly-${WILDFLY_VERSION}.tar.gz ; ln -s wildfly-${WILDFLY_VERSION} wildfly && rm /install/wildfly-${WILDFLY_VERSION}.tar.gz
 RUN cd /install && wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/postgresql/postgresql/9.4-1206-jdbc41/postgresql-9.4-1206-jdbc41.jar && \
 	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/net/postgis/postgis-jdbc/2.2.1/postgis-jdbc-2.2.1.jar && \
-	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/libs-release-local/hibernate-spatial/hibernate-spatial/4.3/hibernate-spatial-4.3.jar && \
+	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/libs-release-local/org/hibernate/hibernate-spatial/4.3/hibernate-spatial-4.3.jar && \
 	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/com/vividsolutions/jts/1.13/jts-1.13.jar && \
 	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/hibernate/hibernate-core/4.3.11.Final/hibernate-core-4.3.11.Final.jar && \
 	wget --http-user=${JFROG_USER} --http-password=${JFROG_PASS} https://entur2.jfrog.io/entur2/jcenter/org/hibernate/hibernate-envers/4.3.11.Final/hibernate-envers-4.3.11.Final.jar && \
